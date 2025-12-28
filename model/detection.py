@@ -3,8 +3,8 @@ import cv2
 import shutil
 from ultralytics import YOLO
 
-# Загружаем модель один раз
-_model = YOLO("yolov8n.pt")
+WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "weights", "yolov8n.pt")
+_model = YOLO(WEIGHTS_PATH)  # используем локальный файл
 
 def detect_best_dog_bbox(image_path: str):
     """

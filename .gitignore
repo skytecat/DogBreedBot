@@ -1,2 +1,15 @@
-config/.env
+# Окружение
 venv/
+.env
+
+# Веса моделей
+weights/
+
+# Кэш и временные файлы
+__pycache__/
+*.pyc
+*.tmp
+
+# IDE
+.vscode/
+.idea/

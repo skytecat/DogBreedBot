@@ -5,7 +5,11 @@ from aiogram.types import Message
 from dotenv import load_dotenv
 import tempfile
 from model.detection import draw_dog_bbox, detect_best_dog_bbox
+from model.classification import BreedClassifier
 from aiogram.types import FSInputFile
+from PIL import Image
+
+classifier = BreedClassifier()
 
 # Получаем директорию, где лежит bot.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +28,21 @@ if not TOKEN:
 # Инициализация
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+def crop_image_by_bbox(image_path: str, bbox):
+    """
+    Обрезает изображение по bounding box и возвращает PIL Image.
+    
+    Args:
+        image_path (str): Путь к исходному изображению
+        bbox (tuple): (x1, y1, x2, y2) — координаты рамки
+    
+    Returns:
+        PIL.Image.Image: Обрезанное изображение
+    """
+    with Image.open(image_path) as img:
+        img = img.convert("RGB") 
+        return img.crop(bbox)
 
 @dp.message(F.text == "/start")
 async def cmd_start(message: Message):
@@ -49,16 +68,17 @@ async def cmd_help(message: Message):
         "❌ Не очень:\n"
         "• Тёмные или пересвеченные фото\n"
         "• Мелкий план\n"
-        "• Сильное размытие или движение\n"
-        "• Фото игрушек, картинок с экрана, мультиков\n\n"
+        "• Сильное размытие или движение\n\n"
+        "❗ *Важно:* если на фото *несколько собак*, я анализирую только *ту, в которой больше всего уверен*\\.\n\n"
         "Готовы? Просто отправьте фото 🐶",
         parse_mode="Markdown"
     )
 
 @dp.message(F.text == "/about")
-async def cmd_help(message: Message):
+async def cmd_about(message: Message):
     await message.answer(
-        "Скоро здесь появится информация о боте и используемых технологиях",
+        "Скоро здесь появится информация о боте и используемых технологиях\n\n"
+        "📂 *Исходный код:* [GitHub](https://github.com/skytecat/DogBreedBot)",
         parse_mode="Markdown"
     )
 
@@ -79,7 +99,6 @@ async def handle_photo(message: Message):
 
         # === 2. Рисуем bbox ===
         dog_found, confidence = draw_dog_bbox(input_path, output_path)
-        # dog_found = draw_dog_bbox(input_path, output_path)
 
         # === 3. Отправляем результат ===
         photo_to_send = FSInputFile(output_path)
@@ -91,7 +110,6 @@ async def handle_photo(message: Message):
                 caption=(
                     "✅ *Отлично\\!* Я нашёл собаку на фото и выделил её красной рамкой\\.\n\n"
                     f"Уверенность: {conf_percent}\\%\n"
-                    "❗ *Важно:* если на фото *несколько собак*, я анализирую только *ту, в которой больше всего уверен*\\.\n\n"
                     "💡 *Совет:*\n"
                     "Если рамка выделила не всю собаку или захватила слишком много фона \\- сделайте новое фото:\n"
                     "• Сфотографируйте *крупнее и чётче*\n"
@@ -113,7 +131,26 @@ async def handle_photo(message: Message):
                 parse_mode="MarkdownV2"
             )
 
-        # === 4. Удаляем временные файлы ===
+# === 4. Теперь анализируем породу и отправляем ОТДЕЛЬНОЕ сообщение ===
+        await message.answer("🧠 Анализирую породу собаки...")
+        
+        cropped_img = crop_image_by_bbox(input_path, bbox)
+        breed, conf = classifier.predict(cropped_img)
+        conf_percent = round(conf * 100)
+
+        # Отправляем результат анализа породы как текстовое сообщение
+        await message.answer(
+            f"🐾 *Порода:* {breed}\n"
+            f"📊 *Уверенность:* {conf_percent}%\n\n"
+            "💡 *Совет:*\n"
+            "Если результат неточный — сделайте новое фото:\n"
+            "• Сфотографируйте *крупнее и чётче*\n"
+            "• В кадре должна быть *только одна собака*\n"
+            "• Используйте *хорошее освещение*",
+            parse_mode="MarkdownV2"
+        )
+
+        # === 5. Удаляем временные файлы ===
         os.unlink(input_path)
         os.unlink(output_path)
 
