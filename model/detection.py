@@ -1,9 +1,10 @@
 # model/detection.py
+import os
 import cv2
 import shutil
 from ultralytics import YOLO
 
-WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "weights", "yolov8n.pt")
+WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "..", "weights", "yolov8n.pt")
 _model = YOLO(WEIGHTS_PATH)  # используем локальный файл
 
 def detect_best_dog_bbox(image_path: str):
@@ -40,7 +41,7 @@ def detect_best_dog_bbox(image_path: str):
 def draw_dog_bbox(image_path: str, output_path: str):
     """
     Рисует bbox с надписью "Dog {confidence:.0%}".
-    Возвращает: (found: bool, confidence: float or None)
+    Возвращает: (found: bool, confidence: float or None, bbox)
     """
     bbox, confidence = detect_best_dog_bbox(image_path)
     
@@ -61,4 +62,4 @@ def draw_dog_bbox(image_path: str, output_path: str):
         0.9, (0, 0, 255), 2
     )
     cv2.imwrite(output_path, img)
-    return True, confidence
+    return True, confidence, bbox
