@@ -8,13 +8,13 @@
 
 1. Пользователь присылает чёткое фото одной собаки
 
-- <img src="assets/demo/demo_0/photo_0.jpg" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_0/photo_0.jpg" alt="Демонстрация работы бота" width="400"/>
 
 2. Бот находит собаку и выделяет ее красной рамкой
 
-- <img src="assets/demo/demo_0/photo_1.png" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_0/photo_1.png" alt="Демонстрация работы бота" width="400"/>
 
-- <img src="assets/demo/demo_0/photo_2.jpg" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_0/photo_2.jpg" alt="Демонстрация работы бота" width="400"/>
 
 - <img src="assets/demo/demo_0/photo_3.png" alt="Демонстрация работы бота" width="400"/>
 
@@ -26,13 +26,13 @@
 
 1. Пользователь присылает фото с несколькими собаками
 
-- <img src="assets/demo/demo_1/photo_0.jpg" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_1/photo_0.jpg" alt="Демонстрация работы бота" width="400"/>
 
 2. Бот находит собаку, в которой детектор максимально уверен и выделяет ее красной рамкой
 
-- <img src="assets/demo/demo_1/photo_1.png" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_1/photo_1.png" alt="Демонстрация работы бота" width="400"/>
 
-- <img src="assets/demo/demo_1/photo_2.jpg" alt="Демонстрация работы бота" width="300"/>
+- <img src="assets/demo/demo_1/photo_2.jpg" alt="Демонстрация работы бота" width="400"/>
 
 - <img src="assets/demo/demo_1/photo_3.png" alt="Демонстрация работы бота" width="400"/>
 
