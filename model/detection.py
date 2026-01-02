@@ -4,8 +4,12 @@ import cv2
 import shutil
 from ultralytics import YOLO
 
-WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "..", "weights", "yolov8n.pt")
-_model = YOLO(WEIGHTS_PATH)  # используем локальный файл
+WEIGHTS_DIR = os.path.join(os.path.dirname(__file__), "..", "weights")
+os.makedirs(WEIGHTS_DIR, exist_ok=True)
+WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, "yolov8s.pt")
+
+# Если файл не существует - YOLO автоматически скачает его
+_model = YOLO(WEIGHTS_PATH)
 
 def detect_best_dog_bbox(image_path: str):
     """
