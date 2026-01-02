@@ -1,5 +1,6 @@
 import os
 import asyncio
+import gc
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from dotenv import load_dotenv
@@ -9,25 +10,29 @@ from model.classification import BreedClassifier, crop_image_by_bbox
 from aiogram.types import FSInputFile
 from PIL import Image
 
+import logging
+logging.basicConfig(
+    filename='/root/breedbot/error.log',
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# === Инициализация глобальных объектов ===
 classifier = BreedClassifier()
+processing_semaphore = asyncio.Semaphore(1)  # ⚠️ Только 1 одновременная обработка
 
-# Получаем директорию, где лежит bot.py
+# Пути и токен
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Строим абсолютный путь к .env
 ENV_PATH = os.path.join(BASE_DIR, "config", ".env")
-
-# Загружаем переменные
 load_dotenv(ENV_PATH)
 
-# Получаем токен
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise RuntimeError("BOT_TOKEN не найден! Проверьте config/.env")
 
-# Инициализация
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
 
 @dp.message(F.text == "/start")
 async def cmd_start(message: Message):
@@ -40,6 +45,7 @@ async def cmd_start(message: Message):
         "Отправьте фото и мы начнём!",
         parse_mode="Markdown"
     )
+
 
 @dp.message(F.text == "/help")
 async def cmd_help(message: Message):
@@ -59,6 +65,7 @@ async def cmd_help(message: Message):
         parse_mode="Markdown"
     )
 
+
 @dp.message(F.text == "/about")
 async def cmd_about(message: Message):
     await message.answer(
@@ -69,87 +76,108 @@ async def cmd_about(message: Message):
         parse_mode="Markdown"
     )
 
+
 @dp.message(F.photo)
 async def handle_photo(message: Message):
-    await message.answer("🔍 Ищу собаку на фото...")
-    try:
-        # === 1. Получаем фото ===
-        photo = message.photo[-1]
-        file_info = await bot.get_file(photo.file_id)
-        
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_in:
-            await bot.download_file(file_info.file_path, tmp_in.name)
-            input_path = tmp_in.name
+    # ⚠️ Ограничиваем одновременные запросы
+    if processing_semaphore.locked():
+        await message.answer("⏳ Бот сейчас обрабатывает другое изображение. Пожалуйста, подождите немного!")
+        return
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_out:
-            output_path = tmp_out.name
+    async with processing_semaphore:
+        await message.answer("🔍 Ищу собаку на фото...")
+        input_path = tempfile.mktemp(suffix=".jpg")
+        output_path = tempfile.mktemp(suffix=".jpg")
 
-        # === 2. Рисуем bbox ===
-        dog_found, confidence, bbox = draw_dog_bbox(input_path, output_path)
+        try:
+            # === 1. Получаем фото ===
+            photo = message.photo[-1]
+            file_info = await bot.get_file(photo.file_id)
+            await bot.download_file(file_info.file_path, input_path)
 
-        # === 3. Отправляем результат ===
-        photo_to_send = FSInputFile(output_path)
-        
-        if dog_found:
-            conf_percent = round(confidence * 100)
-            await message.answer_photo(
-                photo_to_send,
-                caption=(
-                    "✅ *Отлично\\!* Я нашёл собаку на фото и выделил её красной рамкой\\.\n\n"
-                    f"*Уверенность:* {conf_percent}\\%\n\n"
+            # === 2. Рисуем bbox ===
+            dog_found, confidence, bbox = draw_dog_bbox(input_path, output_path)
+
+            photo_to_send = FSInputFile(output_path)
+
+            if dog_found:
+                conf_percent = round(confidence * 100)
+                await message.answer_photo(
+                    photo_to_send,
+                    caption=(
+                        "✅ *Отлично\\!* Я нашёл собаку на фото и выделил её красной рамкой\\.\n\n"
+                        f"*Уверенность:* {conf_percent}\\%\n\n"
+                        "💡 *Совет:*\n"
+                        "Если рамка выделила не всю собаку или захватила слишком много фона \\- сделайте новое фото:\n"
+                        "• Сфотографируйте *крупнее и чётче*\n"
+                        "• В кадре должна быть *только одна собака*\n"
+                        "• Используйте *хорошее освещение*\n\n"
+                        "Так я дам вам *самый точный ответ*\\! 🐾\n\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
+
+                # === 3. Анализ породы ===
+                await message.answer("🧠 Анализирую породу собаки...")
+                cropped_img = crop_image_by_bbox(input_path, bbox)
+                breed, conf = classifier.predict(cropped_img)
+                conf_percent = round(conf * 100)
+
+                # ⚠️ №2: явно закрываем PIL-изображение
+                if hasattr(cropped_img, 'close'):
+                    cropped_img.close()
+                del cropped_img
+
+                await message.answer(
+                    f"🐾 *Порода:* {breed}\n"
+                    f"📊 *Уверенность:* {conf_percent}%\n\n"
                     "💡 *Совет:*\n"
-                    "Если рамка выделила не всю собаку или захватила слишком много фона \\- сделайте новое фото:\n"
+                    "Если результат неточный — сделайте новое фото:\n"
                     "• Сфотографируйте *крупнее и чётче*\n"
                     "• В кадре должна быть *только одна собака*\n"
-                    "• Используйте *хорошее освещение*\n\n"
-                    "Так я дам вам *самый точный ответ*\\! 🐾\n\n"
-                ),
-                parse_mode="MarkdownV2"
-            )
-# === 4. Теперь анализируем породу и отправляем ОТДЕЛЬНОЕ сообщение ===
-            await message.answer("🧠 Анализирую породу собаки...")
-            
-            cropped_img = crop_image_by_bbox(input_path, bbox)
-            breed, conf = classifier.predict(cropped_img)
-            conf_percent = round(conf * 100)
+                    "• Используйте *хорошее освещение*",
+                    parse_mode="MarkdownV2"
+                )
+            else:
+                await message.answer_photo(
+                    photo_to_send,
+                    caption=(
+                        "🤔 Кажется, на фото нет собаки или я не знаю такую породу\n\n"
+                        "💡 *Совет:*\n"
+                        "• Убедитесь, что освещение хорошее и собаку чётко видно\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
 
-            # Отправляем результат анализа породы как текстовое сообщение
-            await message.answer(
-                f"🐾 *Порода:* {breed}\n"
-                f"📊 *Уверенность:* {conf_percent}%\n\n"
-                "💡 *Совет:*\n"
-                "Если результат неточный — сделайте новое фото:\n"
-                "• Сфотографируйте *крупнее и чётче*\n"
-                "• В кадре должна быть *только одна собака*\n"
-                "• Используйте *хорошее освещение*",
-                parse_mode="MarkdownV2"
-            )
-        else:
-            await message.answer_photo(
-                photo_to_send,
-                caption=(
-                    "🤔 Кажется, на фото нет собаки или я не знаю такую породу\n\n"
-                    "💡 *Совет:*\n"
-                    "• Убедитесь, что освещение хорошее и собаку чётко видно\n"
-                ),
-                parse_mode="MarkdownV2"
-            )
+        # except Exception as e:
+        #     await message.answer("Произошла ошибка при обработке фото")
+        #     print(f"Ошибка в боте: {e}")
+        except Exception as e:
+            await message.answer("Произошла ошибка при обработке фото 🛠️\nПопробуйте другое изображение.")
+            logging.exception("Ошибка при обработке фото")  # ← это запишет traceback!
 
-        # === 5. Удаляем временные файлы ===
-        os.unlink(input_path)
-        os.unlink(output_path)
+        finally:
+            # ⚠️ №1: надёжное удаление временных файлов
+            for path in (input_path, output_path):
+                try:
+                    if os.path.exists(path):
+                        os.unlink(path)
+                except OSError as ex:
+                    print(f"Не удалось удалить временный файл {path}: {ex}")
 
-    except Exception as e:
-        await message.answer("Произошла ошибка при обработке фото")
-        print(f"Ошибка в боте: {e}")
+            # ⚠️ №2: принудительная сборка мусора
+            gc.collect()
+
 
 @dp.message()
 async def fallback(message: Message):
     await message.answer("Отправь фото собаки, я найду ее и определю породу")
 
+
 async def main():
     print("Бот запущен...")
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

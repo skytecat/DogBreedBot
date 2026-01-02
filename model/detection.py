@@ -47,7 +47,7 @@ def draw_dog_bbox(image_path: str, output_path: str):
     
     if bbox is None:
         shutil.copy(image_path, output_path)
-        return False, None
+        return False, 0.0, None
 
     img = cv2.imread(image_path)
     x1, y1, x2, y2 = bbox

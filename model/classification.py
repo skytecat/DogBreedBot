@@ -4,12 +4,7 @@ from torchvision import transforms
 from PIL import Image
 import pickle
 import os
-
-_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
-_TRANSLATION_PATH = os.path.join(_DATA_DIR, "breed_translation.json")
-
-with open(_TRANSLATION_PATH, encoding="utf-8") as f:
-    BREED_TRANSLATION = json.load(f)
+from data.breed_translation import BREED_TRANSLATION
 
 def crop_image_by_bbox(image_path: str, bbox):
     """
@@ -110,7 +105,7 @@ class BreedClassifier:
             breed_key = raw_breed_name.replace("_", " ").lower()  # на всякий случай
 
         # Получаем перевод (или оставляем ключ, если перевода нет)
-        breed_name = BREED_TRANSLATION.get(breed_key, breed_key.replace("_", " ").title())
+        breed_name = BREED_TRANSLATION.get(breed_key, breed_key.title())
         
         confidence = float(probabilities[predicted_class_id])
         return breed_name, confidence
