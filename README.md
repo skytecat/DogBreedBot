@@ -19,8 +19,7 @@
   - [+ Итоговая end-to-end точность](#итоговая-end-to-end-точность)
   - [+ Распределение ошибок](#распределение-ошибок)
   - [Оценка качества детекции](#оценка-качества-детекции)
-  - [Оценка качества классификации](#оценка-качества-классификации)
-- [Как запустить](#как-запустить)
+  - [+ Оценка качества классификации](#оценка-качества-классификации)
 
 ## О проекте
 
@@ -327,39 +326,55 @@ $$
 
 ---
 
-#### Примеры уверенных ошибок (>70% уверенности)
+#### Примеры уверенных ошибок
 
-Иногда модель путает **визуально близкие породы** — что понятно даже человеку.
+Ниже примеры случаев, когда модель **ошиблась, но была уверена в своём ответе (>70%)**
 
-<!-- ### Ошибка 1
-- **Истина**: Ши-тцу  
-- **Предсказание**: Пекинес (уверенность: 82%)
+Слева **исходное фото из валидационной выборки**, справа **эталонное изображение предсказанной породы**
 
 <table>
   <tr>
-    <td><img src="assets/analysis/errors/shih_tzu_input.jpg" width="250" alt="Исходное фото"></td>
-    <td><img src="assets/analysis/errors/pekinese_example.jpg" width="250" alt="Пекинес (пример)"></td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_1_0.jpg" alt="Eskimo Dog (ошибка)" width="280"><br>
+      <b>Истина:</b> Eskimo Dog<br>
+      <b>Предсказание:</b> Malamute (81.0%)
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_1_1.jpg" alt="Malamute" width="280"><br>
+      <i>Настоящий Malamute</i>
+    </td>
   </tr>
   <tr>
-    <td align="center"><i>Исходное фото</i></td>
-    <td align="center"><i>Типичный Пекинес</i></td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_3_0.jpg" alt="Australian Terrier (ошибка)" width="280"><br>
+      <b>Истина:</b> Australian Terrier<br>
+      <b>Предсказание:</b> Yorkshire Terrier (79.1%)
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_3_1.jpg" alt="Yorkshire Terrier" width="280"><br>
+      <i>Настоящий Yorkshire Terrier</i>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_0_0.jpg" alt="Great Pyrenees (ошибка)" width="280"><br>
+      <b>Истина:</b> Great Pyrenees<br>
+      <b>Предсказание:</b> Samoyed (74.8%)
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_0_1.jpg" alt="Samoyed" width="280"><br>
+      <i>Настоящий Samoyed</i>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_2_0.jpg" alt="Sealyham Terrier (ошибка)" width="280"><br>
+      <b>Истина:</b> Sealyham Terrier<br>
+      <b>Предсказание:</b> Dandie Dinmont (78.5%)
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/analysis/classification/mistakes/photo_2_1.jpg" alt="Dandie Dinmont" width="280"><br>
+      <i>Настоящий Dandie Dinmont</i>
+    </td>
   </tr>
 </table>
-
-### Ошибка 2
-- **Истина**: Бордер-колли  
-- **Предсказание**: Австралийская овчарка (уверенность: 78%)
-
-<table>
-  <tr>
-    <td><img src="assets/analysis/errors/border_input.jpg" width="250"></td>
-    <td><img src="assets/analysis/errors/australian_example.jpg" width="250"></td>
-  </tr>
-  <tr>
-    <td align="center"><i>Исходное фото</i></td>
-    <td align="center"><i>Типичная австралийская овчарка</i></td>
-  </tr>
-</table> -->
-
-
-## Как запустить
