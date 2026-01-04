@@ -9,8 +9,16 @@ from model.detection import draw_dog_bbox, detect_best_dog_bbox
 from model.classification import BreedClassifier, crop_image_by_bbox
 from aiogram.types import FSInputFile
 from PIL import Image
-
 import logging
+from data.breed_translation import BREED_TRANSLATION
+
+def escape(text: str) -> str:
+    """
+    Экранирует специальные символы для Telegram MarkdownV2.
+    """
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return ''.join('\\' + char if char in escape_chars else char for char in text)
+
 logging.basicConfig(
     filename='/root/breedbot/error.log',
     level=logging.ERROR,
@@ -46,6 +54,33 @@ async def cmd_start(message: Message):
         parse_mode="Markdown"
     )
 
+@dp.message(F.text == "/breeds")
+async def send_breeds_list(message: Message):
+    # Получаем список пород (на русском)
+    breeds_rus = list(BREED_TRANSLATION.values())
+    breeds_rus.sort()  # сортируем по алфавиту
+
+    # Ограничиваем длину сообщения (Telegram — 4096 символов)
+    text = "🐾 Я знаю следующие породы:\n\n" + "\n".join(f"• {breed}" for breed in breeds_rus)
+
+    if len(text) <= 4096:
+        await message.answer(text)
+    else:
+        # Если слишком длинно — разбиваем на части
+        parts = []
+        current = "🐾 Я знаю следующие породы:\n\n"
+        for breed in breeds_rus:
+            line = f"• {breed}\n"
+            if len(current) + len(line) > 4096:
+                parts.append(current)
+                current = line
+            else:
+                current += line
+        if current:
+            parts.append(current)
+
+        for part in parts:
+            await message.answer(part)
 
 @dp.message(F.text == "/help")
 async def cmd_help(message: Message):
@@ -128,8 +163,9 @@ async def handle_photo(message: Message):
                     cropped_img.close()
                 del cropped_img
 
+                safe_breed = escape(breed)
                 await message.answer(
-                    f"🐾 *Порода:* {breed}\n"
+                    f"🐾 *Порода:* {safe_breed}\n"
                     f"📊 *Уверенность:* {conf_percent}%\n\n"
                     "💡 *Совет:*\n"
                     "Если результат неточный — сделайте новое фото:\n"
@@ -149,12 +185,17 @@ async def handle_photo(message: Message):
                     parse_mode="MarkdownV2"
                 )
 
-        # except Exception as e:
-        #     await message.answer("Произошла ошибка при обработке фото")
-        #     print(f"Ошибка в боте: {e}")
         except Exception as e:
+            # Отправляем пользователю краткое сообщение
             await message.answer("Произошла ошибка при обработке фото 🛠️\nПопробуйте другое изображение.")
-            logging.exception("Ошибка при обработке фото")  # ← это запишет traceback!
+
+            # Логируем полный стек ошибки + тип ошибки
+            error_msg = f"❌ Ошибка при обработке фото: {type(e).__name__}: {e}"
+            print(error_msg)  # Выводим в консоль (для systemd)
+            
+            import traceback
+            tb_str = traceback.format_exc()
+            print(tb_str)  # Полный стек — ключ к диагностике!
 
         finally:
             # ⚠️ №1: надёжное удаление временных файлов
