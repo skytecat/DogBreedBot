@@ -59,13 +59,10 @@
 
     <img src="assets/demo/demo_0/photo_1.png" alt="Демонстрация работы бота" width="400"/>
 
-    <img src="assets/demo/demo_0/photo_2.jpg" alt="Демонстрация работы бота" width="400"/>
-
-    <img src="assets/demo/demo_0/photo_3.png" alt="Демонстрация работы бота" width="400"/>
 
 3. Называет породу на русском языке с указанием уверенности
 
-    <img src="assets/demo/demo_0/photo_4.png" alt="Демонстрация работы бота" width="400"/>
+    <img src="assets/demo/demo_0/photo_2.png" alt="Демонстрация работы бота" width="400"/>
 
 #### Пример 2: Несколько собак в кадре
 
