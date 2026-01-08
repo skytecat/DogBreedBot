@@ -136,7 +136,7 @@
 
 > ⚠️ Файл может не отображаться на GitHub из-за размера, но доступен при клонировании репозитория
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1AbC123...xyz)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XOBE-_eqJBbQBkF6ouFpcpr087_2KdEi?usp=sharing)
 
 ## Архитектура модели: от детекции к классификации
 ```
