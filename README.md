@@ -399,6 +399,50 @@
   </tr>
 </table>
 
+#### Уверенность после переобучения на всём датасете
+
+После переобучения модели на 100% данных (вместо 90/10 split) наблюдался рост уверенности в правильных предсказаниях. Это улучшает восприятие результата пользователем. Уверенность измерялась на фиксированном наборе изображений, не участвовавших в обучении ни в одном из сценариев (hold-out set)
+
+Примеры изменения уверенности на валидационных изображениях:
+
+<table>
+  <tr>
+    <td align="center"><b>Исходное фото</b></td>
+    <td align="center"><b>До переобучения</b></td>
+    <td align="center"><b>После переобучения</b></td>
+  </tr>
+  
+  <!-- Пример 1 -->
+  <tr>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_0.png" alt="Исходное фото 1" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_1.png" alt="До:" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_2.png" alt="После:" width="220"/></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><em>Немецкая овчарка: 76% -> 89%</em></td>
+  </tr>
+
+  <!-- Пример 2 -->
+  <tr>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_3.png" alt="Исходное фото 2" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_4.png" alt="До:" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_5.png" alt="После:" width="220"/></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><em>Пекинес: 88% -> 95%</em></td>
+  </tr>
+
+  <!-- Пример 3 -->
+  <tr>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_6.png" alt="Исходное фото 3" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_7.png" alt="До:" width="220"/></td>
+    <td><img src="assets/analysis/classification/confidence_demo/photo_8.png" alt="После:" width="220"/></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><em>Мопс: 86% -> 95%</em></td>
+  </tr>
+</table>
+
 ### Итоговая end-to-end точность
 
 - **Чувствительность детектора** (доля найденных собак среди всех реальных) = **89%**  
