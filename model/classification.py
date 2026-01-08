@@ -25,7 +25,7 @@ class BreedClassifier:
     """
     Классификатор пород собак на основе предобученной ResNet18 + Logistic Regression.
     Использует torchvision.models.resnet18(weights='IMAGENET1K_V1') напрямую.
-    Требуется только файл breed_classifier_best.pkl.
+    Требуется только файл breed_classifier_final.pkl.
     """
     
     def __init__(self):
@@ -34,16 +34,8 @@ class BreedClassifier:
         
         Args:
             model_dir (str): Путь к папке с файлом:
-                - breed_classifier_best.pkl
+                - breed_classifier_final.pkl
         """
-        print(f"DEBUG: __file__ = {__file__}")
-        print(f"DEBUG: os.path.dirname(__file__) = {os.path.dirname(__file__)}")
-        model_dir = os.path.join(os.path.dirname(__file__), "..", "weights")
-        print(f"DEBUG: model_dir = {os.path.abspath(model_dir)}")
-        clf_path = os.path.join(model_dir, "breed_classifier_best.pkl")
-        print(f"DEBUG: clf_path = {os.path.abspath(clf_path)}")
-        if not os.path.exists(clf_path):
-            raise FileNotFoundError(f"Не найден файл классификатора: {clf_path}")
 
         model_dir = os.path.join(os.path.dirname(__file__), "..", "weights")
         self.device = torch.device("cpu")
@@ -55,7 +47,7 @@ class BreedClassifier:
         self.backbone.to(self.device)
         
         # --- Загрузка только классификатора (LogisticRegression) ---
-        clf_path = os.path.join(model_dir, "breed_classifier_best.pkl")
+        clf_path = os.path.join(model_dir, "breed_classifier_final.pkl")
         if not os.path.exists(clf_path):
             raise FileNotFoundError(f"Не найден файл классификатора: {clf_path}")
         
