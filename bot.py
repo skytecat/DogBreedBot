@@ -48,9 +48,7 @@ async def cmd_start(message: Message):
         "Привет! 🐾\n\n"
         "Я - **Dog Breed Bot**, ваш виртуальный помощник по определению пород собак 🐕\n\n"
         "🎯 Просто пришлите фото собаки - и я скажу, кто это!\n"
-        "💡 Я знаю **120** пород - от лабрадоров до редких овчарок.\n"
-        "❗ Но помните: я - ИИ, а не кинолог. Моя оценка не заменяет эксперта.\n\n"
-        "Отправьте фото и мы начнём!",
+        "💡 Я знаю **120** пород - от лабрадоров до редких овчарок\n",
         parse_mode="Markdown"
     )
 
@@ -66,7 +64,7 @@ async def send_breeds_list(message: Message):
     if len(text) <= 4096:
         await message.answer(text)
     else:
-        # Если слишком длинно — разбиваем на части
+        # Если слишком длинно, то разбиваем на части
         parts = []
         current = "🐾 Я знаю следующие породы:\n\n"
         for breed in breeds_rus:
@@ -114,7 +112,7 @@ async def cmd_about(message: Message):
 
 @dp.message(F.photo)
 async def handle_photo(message: Message):
-    # ⚠️ Ограничиваем одновременные запросы
+    # Ограничиваем одновременные запросы
     if processing_semaphore.locked():
         await message.answer("⏳ Бот сейчас обрабатывает другое изображение. Пожалуйста, подождите немного!")
         return
@@ -158,7 +156,7 @@ async def handle_photo(message: Message):
                 breed, conf = classifier.predict(cropped_img)
                 conf_percent = round(conf * 100)
 
-                # ⚠️ №2: явно закрываем PIL-изображение
+                # явно закрываем PIL-изображение
                 if hasattr(cropped_img, 'close'):
                     cropped_img.close()
                 del cropped_img
@@ -198,7 +196,7 @@ async def handle_photo(message: Message):
             print(tb_str)  # Полный стек — ключ к диагностике!
 
         finally:
-            # ⚠️ №1: надёжное удаление временных файлов
+            # надёжное удаление временных файлов
             for path in (input_path, output_path):
                 try:
                     if os.path.exists(path):
@@ -206,7 +204,7 @@ async def handle_photo(message: Message):
                 except OSError as ex:
                     print(f"Не удалось удалить временный файл {path}: {ex}")
 
-            # ⚠️ №2: принудительная сборка мусора
+            # принудительная сборка мусора
             gc.collect()
 
 
